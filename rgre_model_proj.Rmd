@@ -1,0 +1,78 @@
+---
+title: "Study of mtcars dataset using regression models and exploratory data analysis"
+author: "Preetam Debasish Saha Roy"
+date: "Tuesday, January 20, 2015"
+output: html_document
+---
+**Executive Summary**
+
+In this study we will be investigating a data set of a collection of cars to explore the relationship between a set of variables and miles per gallon (MPG) (outcome). We are particularly interested in the relation of automatic or manual transmission on mpg variable. Results of regression model suggest manual transmission increases the mpg of a car when other regressors are held constant.
+
+**Exploratory analysis**
+```{r echo=FALSE,warning=FALSE,results='hide'}
+library(datasets)
+library(ggplot2)
+library(corrplot)
+dm<-dim(mtcars)
+cr<-cor(mtcars)
+```
+
+Let's explore the mtcars dataset. So,the dataset contains `r dm[1]` observations and `r dm[2]` variable. Out of this `r dm[2]` variables mpg variable is the predictor and other variables are considered to be regressors at the start of this study. First let's look at the correlation matrix (Figure 1) for the mtcars dataset to get a quick idea about the different variables and their inter dependence.
+
+**Model Selection**
+
+For model selection purpose we use the AIC criteria to judge which are the regressors that best describe the variability in the predictor mpg based on mtcars dataset.
+
+```{r results='hide'}
+fit<-lm(mpg~.,data=mtcars)
+s<-step(fit,direction = "backward")
+```
+For model selection we use the AIC as the criterion. First, we creat a linear model using all the regressors in the dataset. Next, we calculate the AIC value for this model. Then, calculate AIC table by removing one regressor at a time and calculating the model AIC. So, we remove the regressor which gives us the lowest AIC. This way we continue removing regressors unless model AIC cannot be lowered anymore by removing any of the regressors. This whole thing is achieved by the step function.
+
+Let's now look at the best model fit that we get for mpg predictor using this AIC criteria.
+```{r}
+s$coefficients
+```
+So, we will be modelling mpg predictor using wt,qsec and am variables as predictors.
+
+**Interpreting Coefficients**
+
+In our model intercept denote the mpg of a car with automatic transmission, zero weight and zero qsec value. The coefficient for wt variable denotes the increase in mpg variable per one unit change in wt variable, holding other regressors constant. Similary, coefficient of the qsec varaiable denotes change in mpg variable per unit change in qsec variable, holding other regressors constant. Finally, coefficient of the am variable denotes the change in the intercept of the line for manual transmission case when compared with the automatic transmission case when other regressors are held constant.
+
+**Effect of transmission on the mpg variable**
+
+To study the effect of transmission ('am' variable) on mpg we look at the summary of our model and different coefficients to get a better insight.
+```{r echo=FALSE}
+summary(s)$coef
+```
+The p-value corresponding to the coefficient of the 'am' variable is well 0.05, so effect of transmission is significant on the mpg of a car based on the present model. The coefficient of the 'am' variable denotes the increase in mpg for a car in case of manual transmission compared to automatic transmission case when wt and qsec variables are held constant. **So, if wt and qsec variables are held constant then the car with manual transmission will have 2.936 units of mpg more when compared to a car with automatic transmission.**
+
+**Residuals and Diagnostics**
+
+To see how good our predictions from the model are we need to look at the residuals against fitted values plot. As we can see from the figure 2, there seems to be no particular pattern in the plot of the residuals, so our model works well.
+```{r}
+mdfb<-round(max(dfbetas(s)),3)
+```
+
+ Now if we look at the values of the dfbetas, maximum value is `r mdfb`, which is not very large, suggesting that there is no single point driving the relation between the predictor and regressors. 
+  
+ **Uncertaininty of the model**
+ 
+ Now let's look at the upper and lower limit of the coefficients of the regressors in the model for two sided 95% significance level. 
+```{r}
+confint(s)
+```
+ As we can see coefficient of the intercept term varies quite a lot due to small sample size. Another thing to notice is that lower limit of the coefficient of am is above zero, so even with 95% confidence interval manual increases the mpg of a car comapred to automatic transmission when other regressors are held constant.
+
+
+
+**Appendix**
+
+```{r echo=FALSE}
+par(cex=0.7)
+corrplot.mixed(cr,mar=c(2,2,2,2),main="Fig 1:Correlation matrix for mtcars dataset")
+par(cex=0.8)
+plot(predict(s),resid(s),pch=19,main="Fig 2:Reisduals against predicted values from the model")
+```
+
+
